@@ -1,47 +1,35 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
+from typing import List
+from app.schemas.animal import AnimalCreate, Animal, AnimalUpdate
+from app.services.animal_service import AnimalService
 from app.core.database import get_db
 
-from app.models.animal import Animal as AnimalModel
-from app.schemas.animal import Animal as AnimalSchema, AnimalCreate
-
+# REMOVEMOS O PREFIXO E TAGS DAQUI
 router = APIRouter()
 
-@router.get("/", response_model=list[AnimalSchema])
-def listar_animais(db: Session = Depends(get_db)):
-    return db.query(AnimalModel).all()
-
-@router.get("/{animal_id}", response_model=AnimalSchema)
-def obter_animal(animal_id: int, db: Session = Depends(get_db)):
-    animal = db.query(AnimalModel).filter(AnimalModel.id == animal_id).first()
-    if not animal:
-        raise HTTPException(status_code=404, detail="Animal não encontrado")
-    return animal
-
-@router.post("/", response_model=AnimalSchema)
+@router.post("/", response_model=Animal, status_code=status.HTTP_201_CREATED)
 def criar_animal(animal: AnimalCreate, db: Session = Depends(get_db)):
-    novo_animal = AnimalModel(**animal.dict())
-    db.add(novo_animal)
-    db.commit()
-    db.refresh(novo_animal)
-    return novo_animal
+    service = AnimalService(db)
+    return service.criar_animal(animal)
 
-@router.put("/{animal_id}", response_model=AnimalSchema)
-def atualizar_animal(animal_id: int, dados: AnimalCreate, db: Session = Depends(get_db)):
-    animal = db.query(AnimalModel).filter(AnimalModel.id == animal_id).first()
-    if not animal:
-        raise HTTPException(status_code=404, detail="Animal não encontrado")
-    for key, value in dados.dict().items():
-        setattr(animal, key, value)
-    db.commit()
-    db.refresh(animal)
-    return animal
+@router.get("/", response_model=List[Animal])
+def listar_animais(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    service = AnimalService(db)
+    return service.listar_animais(skip=skip, limit=limit)
 
-@router.delete("/{animal_id}")
+@router.get("/{animal_id}", response_model=Animal)
+def buscar_animal(animal_id: int, db: Session = Depends(get_db)):
+    service = AnimalService(db)
+    return service.buscar_animal(animal_id)
+
+@router.put("/{animal_id}", response_model=Animal)
+def atualizar_animal(animal_id: int, animal_dados: AnimalUpdate, db: Session = Depends(get_db)):
+    service = AnimalService(db)
+    return service.atualizar_animal(animal_id, animal_dados)
+
+@router.delete("/{animal_id}", status_code=status.HTTP_204_NO_CONTENT)
 def deletar_animal(animal_id: int, db: Session = Depends(get_db)):
-    animal = db.query(AnimalModel).filter(AnimalModel.id == animal_id).first()
-    if not animal:
-        raise HTTPException(status_code=404, detail="Animal não encontrado")
-    db.delete(animal)
-    db.commit()
-    return {"message": "Animal deletado com sucesso"}
+    service = AnimalService(db)
+    service.deletar_animal(animal_id)
+    return None

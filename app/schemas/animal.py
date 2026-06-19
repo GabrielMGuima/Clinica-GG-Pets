@@ -1,10 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 class AnimalBase(BaseModel):
     nome: str
     especie: str
-    tutor_id: int
+    idade: int
+    tutor_id: Optional[int] = None
 
 class AnimalCreate(AnimalBase):
     pass
@@ -12,13 +13,14 @@ class AnimalCreate(AnimalBase):
 class AnimalUpdate(BaseModel):
     nome: Optional[str] = None
     especie: Optional[str] = None
+    idade: Optional[int] = None
     tutor_id: Optional[int] = None
 
 class Animal(BaseModel):
     id: int
     nome: str
     especie: str
-    tutor_id: int
+    idade: int
+    tutor_id: Optional[int] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

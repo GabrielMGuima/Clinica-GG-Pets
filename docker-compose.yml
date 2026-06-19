@@ -1,26 +1,38 @@
-version: '3.9'
+version: '3.8'
 
-services: 
-  api:
-    build: .
-    container_name: clinica_api
-    env_file: .env.example
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
+services:
   db:
     image: postgres:15
-    container_name: clinica_db
+    restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: clinica
+      POSTGRES_USER: usuario
+      POSTGRES_PASSWORD: senha
+      POSTGRES_DB: clinica_db
     ports:
-      - "5433:5433"
-  
-  adminer:
-    image: adminer
-    container_name: clinica_adminer
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  web:
+    build: .
+    # Este comando garante que o servidor rode dentro do container
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
     ports:
-      - "8080:8080" 
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

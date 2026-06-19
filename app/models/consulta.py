@@ -11,6 +11,5 @@ class Consulta(Base):
     tutor_id = Column(Integer, ForeignKey("tutores.id"))
     animal_id = Column(Integer, ForeignKey("animais.id"))
 
-    # Relacionamentos
     tutor = relationship("Tutor", back_populates="consultas")
     animal = relationship("Animal", back_populates="consultas")

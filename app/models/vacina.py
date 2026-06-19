@@ -8,7 +8,7 @@ class Vacina(Base):
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String, nullable=False)
     data_aplicacao = Column(Date, nullable=False)
+    lote = Column(String, nullable=True)
     animal_id = Column(Integer, ForeignKey("animais.id"))
 
-    # Relacionamento com Animal
     animal = relationship("Animal", back_populates="vacinas")

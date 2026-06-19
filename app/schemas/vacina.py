@@ -1,10 +1,11 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, ConfigDict
 from datetime import date
+from typing import Optional
 
 class VacinaBase(BaseModel):
     nome: str
     data_aplicacao: date
+    lote: Optional[str] = None
     animal_id: int
 
 class VacinaCreate(VacinaBase):
@@ -13,13 +14,9 @@ class VacinaCreate(VacinaBase):
 class VacinaUpdate(BaseModel):
     nome: Optional[str] = None
     data_aplicacao: Optional[date] = None
+    lote: Optional[str] = None
     animal_id: Optional[int] = None
 
-class Vacina(BaseModel):
+class Vacina(VacinaBase):
     id: int
-    nome: str
-    data_aplicacao: date
-    animal_id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

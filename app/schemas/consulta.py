@@ -1,11 +1,11 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, ConfigDict
 from datetime import date
+from typing import Optional
 
 class ConsultaBase(BaseModel):
     data: date
-    descricao: str
-    tutor_id: int
+    descricao: str  # Ajustado para 'descricao' (igual ao seu Model)
+    tutor_id: int   # Obrigatório conforme seu model
     animal_id: int
 
 class ConsultaCreate(ConsultaBase):
@@ -17,12 +17,9 @@ class ConsultaUpdate(BaseModel):
     tutor_id: Optional[int] = None
     animal_id: Optional[int] = None
 
-class Consulta(BaseModel):
+class Consulta(ConsultaBase):
     id: int
-    data: date
-    descricao: str
-    tutor_id: int
-    animal_id: int
-
-    class Config:
-        from_attributes = True
+    # Se você for usar status, adicione aqui:
+    # status: str = "AGENDADA" 
+    
+    model_config = ConfigDict(from_attributes=True)

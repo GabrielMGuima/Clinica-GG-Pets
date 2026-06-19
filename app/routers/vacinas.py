@@ -1,47 +1,34 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
+from typing import List
+from app.schemas.vacina import VacinaCreate, Vacina, VacinaUpdate
+from app.services.vacina_service import VacinaService
 from app.core.database import get_db
-
-from app.models.vacina import Vacina as VacinaModel
-from app.schemas.vacina import Vacina as VacinaSchema, VacinaCreate
 
 router = APIRouter()
 
-@router.get("/", response_model=list[VacinaSchema])
-def listar_vacinas(db: Session = Depends(get_db)):
-    return db.query(VacinaModel).all()
-
-@router.get("/{vacina_id}", response_model=VacinaSchema)
-def obter_vacina(vacina_id: int, db: Session = Depends(get_db)):
-    vacina = db.query(VacinaModel).filter(VacinaModel.id == vacina_id).first()
-    if not vacina:
-        raise HTTPException(status_code=404, detail="Vacina não encontrada")
-    return vacina
-
-@router.post("/", response_model=VacinaSchema)
+@router.post("/", response_model=Vacina, status_code=status.HTTP_201_CREATED)
 def criar_vacina(vacina: VacinaCreate, db: Session = Depends(get_db)):
-    nova_vacina = VacinaModel(**vacina.dict())
-    db.add(nova_vacina)
-    db.commit()
-    db.refresh(nova_vacina)
-    return nova_vacina
+    service = VacinaService(db)
+    return service.criar_vacina(vacina)
 
-@router.put("/{vacina_id}", response_model=VacinaSchema)
-def atualizar_vacina(vacina_id: int, dados: VacinaCreate, db: Session = Depends(get_db)):
-    vacina = db.query(VacinaModel).filter(VacinaModel.id == vacina_id).first()
-    if not vacina:
-        raise HTTPException(status_code=404, detail="Vacina não encontrada")
-    for key, value in dados.dict().items():
-        setattr(vacina, key, value)
-    db.commit()
-    db.refresh(vacina)
-    return vacina
+@router.get("/", response_model=List[Vacina])
+def listar_vacinas(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    service = VacinaService(db)
+    return service.listar_vacinas(skip=skip, limit=limit)
 
-@router.delete("/{vacina_id}")
+@router.get("/{vacina_id}", response_model=Vacina)
+def buscar_vacina(vacina_id: int, db: Session = Depends(get_db)):
+    service = VacinaService(db)
+    return service.buscar_vacina(vacina_id)
+
+@router.put("/{vacina_id}", response_model=Vacina)
+def atualizar_vacina(vacina_id: int, vacina_dados: VacinaUpdate, db: Session = Depends(get_db)):
+    service = VacinaService(db)
+    return service.atualizar_vacina(vacina_id, vacina_dados)
+
+@router.delete("/{vacina_id}", status_code=status.HTTP_204_NO_CONTENT)
 def deletar_vacina(vacina_id: int, db: Session = Depends(get_db)):
-    vacina = db.query(VacinaModel).filter(VacinaModel.id == vacina_id).first()
-    if not vacina:
-        raise HTTPException(status_code=404, detail="Vacina não encontrada")
-    db.delete(vacina)
-    db.commit()
-    return {"message": "Vacina deletada com sucesso"}
+    service = VacinaService(db)
+    service.deletar_vacina(vacina_id)
+    return None
