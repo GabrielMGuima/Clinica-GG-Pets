@@ -1,9 +1,10 @@
+import os
 from fastapi import FastAPI, HTTPException
 from app.core.database import engine, Base
 from app.routers import animais, tutores, consultas, vacinas
 from app.core.exceptions import handler_erro_global
 
-# IMPORTANTE: Importar TODOS os modelos para registrar na Base
+# Importação dos modelos
 from app.models.tutor import Tutor
 from app.models.animal import Animal
 from app.models.vacina import Vacina
@@ -15,14 +16,19 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Inicializa o banco de dados criando as tabelas se não existirem
+
 @app.on_event("startup")
 def startup_event():
+    # Verificação robusta
+    if os.getenv("TESTING") == "True":
+        print("Ambiente de teste detectado: pulando criação de tabelas.")
+        return
+    
     Base.metadata.create_all(bind=engine)
 
 app.add_exception_handler(HTTPException, handler_erro_global)
 
-# Rotas
+# Rotas...
 app.include_router(animais.router, prefix="/animais", tags=["Animais"])
 app.include_router(tutores.router, prefix="/tutores", tags=["Tutores"])
 app.include_router(consultas.router, prefix="/consultas", tags=["Consultas"])

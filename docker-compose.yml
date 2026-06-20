@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15
@@ -17,14 +15,15 @@ services:
 
   web:
     build: .
-    # Este comando garante que o servidor rode dentro do container
+    environment:
+      - PYTHONPATH=/app
+      - DATABASE_URL=postgresql://usuario:senha@db:5432/clinica_db
+    # Executa a migração antes de subir o Uvicorn
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - .:/app
     ports:
       - "8000:8000"
-    environment:
-      - DB_HOST=db
     depends_on:
       - db
     networks:

@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from app.repositories.tutor_repository import TutorRepository
 from app.schemas.tutor import TutorCreate
 from app.models.tutor import Tutor as TutorModel
@@ -10,7 +11,13 @@ class TutorService:
         self.repository = TutorRepository(db)
 
     def criar_tutor(self, tutor: TutorCreate) -> TutorModel:
-        return self.repository.criar(tutor)
+        try:
+            return self.repository.criar(tutor)
+        except IntegrityError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email já cadastrado."
+            )
 
     def listar_tutores(self) -> list[TutorModel]:
         return self.repository.listar_todos()
@@ -32,8 +39,16 @@ class TutorService:
                 detail=f"Tutor com ID {tutor_id} não encontrado."
             )
         
-        # Desvincula os animais primeiro (regra de consistência)
         self.repository.desvincular_animais(tutor_id)
-        # Deleta o tutor
         self.repository.deletar(tutor)
         return None
+    
+    def buscar_tutor(self, tutor_id: int):
+       
+        tutor = self.repository.buscar_por_id(tutor_id) 
+        
+        if not tutor:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail="Tutor não encontrado")
+            
+        return tutor

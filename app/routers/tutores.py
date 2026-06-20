@@ -11,6 +11,11 @@ def criar_tutor(tutor: TutorCreate, db: Session = Depends(get_db)):
     service = TutorService(db)
     return service.criar_tutor(tutor)
 
+@router.get("/{tutor_id}", response_model=TutorSchema)
+def buscar_tutor(tutor_id: int, db: Session = Depends(get_db)):
+    service = TutorService(db)
+    return service.buscar_tutor(tutor_id)
+
 @router.get("/", response_model=list[TutorSchema])
 def listar_tutores(db: Session = Depends(get_db)):
     service = TutorService(db)
